@@ -404,7 +404,7 @@ function generateRoomId() {
   return result;
 }
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Serwer działa na http://localhost:${PORT}`);
   console.log(`Socket.io gotowy do połączeń (path: /socket.io/)`);
   console.log(`Test: http://localhost:${PORT}/health`);
