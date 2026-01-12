@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
+const os = require("os");
 const mysql = require("mysql2/promise");
 
 const app = express();
@@ -154,14 +155,16 @@ app.use(express.static(__dirname));
 // Konfiguracja Socket.io - TYLKO dla ścieżki /socket.io/
 
 const io = new Server(server, {
-  path: "/socket.io/", // Explicit path - tylko ta ścieżka jest obsługiwana przez Socket.io
+  // Użyj standardowej ścieżki bez końcowego slasha — prostsze dopasowanie klienta
+  path: "/socket.io",
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    credentials: true,
+    // przy origin: '*' nie ustawiamy credentials na true
+    credentials: false,
   },
   transports: ["polling", "websocket"],
-  allowEIO3: true,
+  // ping/connect timeouts dostosowane do niestabilnych sieci lokalnych
   pingTimeout: 60000,
   pingInterval: 25000,
   connectTimeout: 45000,
@@ -404,9 +407,35 @@ function generateRoomId() {
   return result;
 }
 
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, "0.0.0.0", () => {
+  const nets = os.networkInterfaces();
+  let localIp = null;
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === "IPv4" && !net.internal) {
+        localIp = net.address;
+        break;
+      }
+    }
+    if (localIp) break;
+  }
+
   console.log(`Serwer działa na http://localhost:${PORT}`);
-  console.log(`Socket.io gotowy do połączeń (path: /socket.io/)`);
-  console.log(`Test: http://localhost:${PORT}/health`);
+  if (localIp) {
+    console.log(`Dostęp w sieci lokalnej: http://${localIp}:${PORT}/`);
+    console.log(`Socket.io: ws://${localIp}:${PORT}/socket.io/`);
+    console.log(`Test: http://${localIp}:${PORT}/health`);
+  } else {
+    console.log(`Socket.io gotowy do połączeń (path: /socket.io)`);
+    console.log(`Test: http://localhost:${PORT}/health`);
+  }
+});
+
+// Obsługa błędów serwera (np. EADDRINUSE)
+server.on("error", (err) => {
+  console.error("Błąd serwera:", err);
+  if (err.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} jest już używany. Zakończ proces lub zmień PORT.`);
+  }
 });
 
