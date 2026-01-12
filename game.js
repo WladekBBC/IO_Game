@@ -10,6 +10,8 @@ const state = {
   startTimestamp: null,
   backlogItems: [],
   stories: [],
+  tests: [],
+  quizAnswers: {},
   finished: false,
   // Multiplayer
   socket: null,
@@ -87,6 +89,132 @@ const STORIES = [
   },
 ];
 
+const QUIZ_QUESTIONS = [
+  {
+    id: "quiz-agile",
+    question: "Co to jest Agile?",
+    options: [
+      {
+        id: "a",
+        text: "Metodologia zarządzania projektami oparta na iteracyjnym i przyrostowym podejściu do rozwoju oprogramowania",
+        correct: true,
+      },
+      {
+        id: "b",
+        text: "Narzędzie do zarządzania bazą danych",
+        correct: false,
+      },
+      {
+        id: "c",
+        text: "Język programowania",
+        correct: false,
+      },
+      {
+        id: "d",
+        text: "Framework do testowania oprogramowania",
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: "quiz-mvp",
+    question: "Co oznacza akronim MVP w kontekście Agile?",
+    options: [
+      {
+        id: "a",
+        text: "Most Valuable Player",
+        correct: false,
+      },
+      {
+        id: "b",
+        text: "Minimum Viable Product - minimalna wersja produktu z podstawowymi funkcjami",
+        correct: true,
+      },
+      {
+        id: "c",
+        text: "Maximum Value Process",
+        correct: false,
+      },
+      {
+        id: "d",
+        text: "Multi-Version Platform",
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: "quiz-user-stories",
+    question: "Co oznacza termin User Stories w Agile?",
+    options: [
+      {
+        id: "a",
+        text: "Opowieści użytkowników o produktach",
+        correct: false,
+      },
+      {
+        id: "b",
+        text: "Krótkie opisy wymagań z perspektywy użytkownika końcowego",
+        correct: true,
+      },
+      {
+        id: "c",
+        text: "Historie użytkowania systemu",
+        correct: false,
+      },
+      {
+        id: "d",
+        text: "Dokumentacja techniczna użytkowników",
+        correct: false,
+      },
+    ],
+  },
+];
+
+const TESTS = [
+  {
+    id: "test-login-success",
+    text: "Test: Logowanie z poprawnymi danymi",
+    storyId: "st-login-ok",
+    type: "unit",
+  },
+  {
+    id: "test-login-invalid",
+    text: "Test: Logowanie z niepoprawnymi danymi",
+    storyId: "st-login-ok",
+    type: "unit",
+  },
+  {
+    id: "test-login-lock",
+    text: "Test: Blokada konta po 5 próbach",
+    storyId: "st-login-lock",
+    type: "integration",
+  },
+  {
+    id: "test-reset-email",
+    text: "Test: Wysłanie e-maila resetującego hasło",
+    storyId: "st-reset-email",
+    type: "integration",
+  },
+  {
+    id: "test-reset-token",
+    text: "Test: Walidacja tokena resetującego hasło",
+    storyId: "st-reset-email",
+    type: "unit",
+  },
+  {
+    id: "test-profile-ui",
+    text: "Test: Wyświetlanie formularza profilu",
+    storyId: "st-profile-avatar",
+    type: "e2e",
+  },
+  {
+    id: "test-theme-apply",
+    text: "Test: Zastosowanie niestandardowego motywu",
+    storyId: "st-theme-custom",
+    type: "e2e",
+  },
+];
+
 // Utils
 function $(selector) {
   return document.querySelector(selector);
@@ -118,10 +246,14 @@ function sendScoreUpdate() {
 // Inicjalizacja UI
 function init() {
   bindStartScreen();
+  buildQuiz();
   buildBacklog();
   buildStories();
+  buildTests();
+  bindQuizLogic();
   bindBacklogLogic();
   bindStoriesLogic();
+  bindTestsLogic();
   bindConflictRoom();
   bindRestart();
   bindRanking();
@@ -157,6 +289,11 @@ function bindStartScreen() {
     $("#screen-game").classList.add("active");
     $("#hud").classList.remove("hidden");
 
+    state.sprint = 0;
+    state.quizAnswers = {};
+    buildQuiz();
+    goToRoom("quiz");
+    updateProgressBar();
     startTimer();
   });
 }
@@ -335,6 +472,106 @@ function showMultiplayerResult(result) {
   saveScore(state.teamName, result.myScore, result.myTime, state.mode);
 }
 
+// Pokój 0 – Quiz wprowadzający
+function buildQuiz() {
+  const quizContainer = $("#quiz-container");
+  if (!quizContainer) return;
+  
+  quizContainer.innerHTML = "";
+  
+  QUIZ_QUESTIONS.forEach((question, index) => {
+    const questionDiv = document.createElement("div");
+    questionDiv.className = "quiz-question";
+    questionDiv.dataset.questionId = question.id;
+    
+    let optionsHtml = question.options.map((option) => `
+      <label class="quiz-option">
+        <input type="radio" name="quiz-${question.id}" value="${option.id}" data-correct="${option.correct}">
+        <span class="option-text">${option.id.toUpperCase()}) ${option.text}</span>
+      </label>
+    `).join("");
+    
+    questionDiv.innerHTML = `
+      <h3 class="quiz-question-title">Pytanie ${index + 1}: ${question.question}</h3>
+      <div class="quiz-options">
+        ${optionsHtml}
+      </div>
+    `;
+    
+    quizContainer.appendChild(questionDiv);
+  });
+}
+
+function bindQuizLogic() {
+  const btnValidate = $("#btn-validate-quiz");
+  if (!btnValidate) return;
+  const feedback = $("#feedback-quiz");
+  
+  btnValidate.addEventListener("click", () => {
+    let correct = 0;
+    let total = QUIZ_QUESTIONS.length;
+    let allAnswered = true;
+    
+    QUIZ_QUESTIONS.forEach((question) => {
+      const selected = document.querySelector(`input[name="quiz-${question.id}"]:checked`);
+      if (!selected) {
+        allAnswered = false;
+        return;
+      }
+      
+      const isCorrect = selected.dataset.correct === "true";
+      if (isCorrect) {
+        correct++;
+        selected.closest(".quiz-option").classList.add("correct");
+      } else {
+        selected.closest(".quiz-option").classList.add("wrong");
+        // Pokaż poprawną odpowiedź
+        const correctOption = document.querySelector(`input[name="quiz-${question.id}"][data-correct="true"]`);
+        if (correctOption) {
+          correctOption.closest(".quiz-option").classList.add("correct-answer");
+        }
+      }
+    });
+    
+    if (!allAnswered) {
+      feedback.textContent = "Odpowiedz na wszystkie pytania przed zatwierdzeniem.";
+      feedback.className = "feedback error";
+      animateError(feedback);
+      return;
+    }
+    
+    if (correct === total) {
+      feedback.textContent = "Doskonale! Wszystkie odpowiedzi są poprawne. Możesz przejść dalej.";
+      feedback.className = "feedback ok";
+      state.score += 15;
+      updateScoreDisplay();
+      animateSuccess(feedback);
+      setTimeout(() => {
+        goToRoom("backlog");
+      }, 2000);
+    } else {
+      feedback.textContent = `Poprawnie odpowiedziano na ${correct} z ${total} pytań. Sprawdź poprawne odpowiedzi i spróbuj ponownie.`;
+      feedback.className = "feedback error";
+      state.score += correct * 3; // 3 punkty za każde poprawne
+      updateScoreDisplay();
+      animateError(feedback);
+      
+      // Reset po 3 sekundach
+      setTimeout(() => {
+        QUIZ_QUESTIONS.forEach((question) => {
+          const options = document.querySelectorAll(`input[name="quiz-${question.id}"]`);
+          options.forEach((option) => {
+            option.checked = false;
+            option.closest(".quiz-option").classList.remove("correct", "wrong", "correct-answer");
+          });
+        });
+        feedback.textContent = "";
+        feedback.className = "feedback";
+      }, 3000);
+    }
+  });
+}
+
 // Pokój 1 – Sprint Backlog
 function buildBacklog() {
   state.backlogItems = BACKLOG_ITEMS.map((i) => ({ ...i }));
@@ -406,6 +643,8 @@ function bindBacklogLogic() {
         "Świetnie! Sprint Backlog zawiera najważniejsze elementy w realistycznym zakresie.";
       feedback.className = "feedback ok";
       state.score += 15;
+      updateScoreDisplay();
+      animateSuccess(feedback);
       goToRoom("stories");
     }
 
@@ -470,17 +709,129 @@ function bindStoriesLogic() {
       feedback.className = "feedback ok";
       state.score += 15;
       updateScoreDisplay();
-      goToRoom("conflict");
+      animateSuccess(feedback);
+      goToRoom("tests");
     } else {
       feedback.textContent = `Poprawnie sklasyfikowano ${correct} z ${total} historii. Spróbuj jeszcze raz – myśl o wartości względem celu Sprintu.`;
       feedback.className = "feedback error";
       state.score -= 3;
       updateScoreDisplay();
+      animateError(feedback);
     }
   });
 }
 
-// Pokój 3 – Konflikt PO–Dev
+// Pokój 3 – Testy
+function buildTests() {
+  state.tests = TESTS.map((t) => ({ ...t }));
+  const testsPool = $("#tests-pool");
+  if (!testsPool) return;
+  
+  testsPool.innerHTML = "";
+
+  state.tests.forEach((test) => {
+    const li = document.createElement("li");
+    li.className = "card test-card";
+    li.draggable = true;
+    li.dataset.id = test.id;
+    li.dataset.storyId = test.storyId;
+    li.dataset.type = test.type;
+    
+    const typeLabel = test.type === "unit" ? "Unit" : test.type === "integration" ? "Integration" : "E2E";
+    const typeColor = test.type === "unit" ? "#22c55e" : test.type === "integration" ? "#3b82f6" : "#a855f7";
+    
+    li.innerHTML = `
+      <div class="card-title">${test.text}</div>
+      <div class="card-meta">
+        <span class="test-type-pill" style="background: ${typeColor}">${typeLabel}</span>
+      </div>
+    `;
+    testsPool.appendChild(li);
+  });
+
+  initDragAndDrop();
+}
+
+function bindTestsLogic() {
+  const btnValidate = $("#btn-validate-tests");
+  if (!btnValidate) return;
+  const feedback = $("#feedback-tests");
+
+  btnValidate.addEventListener("click", () => {
+    const storyTestPairs = document.querySelectorAll(".story-test-pair");
+    let correct = 0;
+    let total = 0;
+
+    storyTestPairs.forEach((pair) => {
+      const storyId = pair.dataset.storyId;
+      const testCards = Array.from(pair.querySelectorAll(".test-card"));
+      
+      if (testCards.length > 0) {
+        total++;
+        const isCorrect = testCards.some((card) => card.dataset.storyId === storyId);
+        if (isCorrect) {
+          correct++;
+          pair.classList.add("correct-pair");
+        } else {
+          pair.classList.add("wrong-pair");
+        }
+      }
+    });
+
+    // Sprawdź czy wszystkie testy są przypisane
+    const testsPool = $("#tests-pool");
+    const unassignedTests = testsPool.querySelectorAll(".test-card");
+    
+    if (unassignedTests.length > 0) {
+      feedback.textContent = `Nie wszystkie testy zostały przypisane. Przypisz testy do odpowiednich User Stories.`;
+      feedback.className = "feedback error";
+      state.score -= 5;
+      updateScoreDisplay();
+      animateError(feedback);
+      return;
+    }
+
+    const allStories = document.querySelectorAll(".story-test-pair");
+    const allHaveTests = Array.from(allStories).every((pair) => {
+      return pair.querySelectorAll(".test-card").length > 0;
+    });
+
+    if (!allHaveTests) {
+      feedback.textContent = "Każda User Story w Sprintcie powinna mieć przypisane testy.";
+      feedback.className = "feedback error";
+      state.score -= 3;
+      updateScoreDisplay();
+      animateError(feedback);
+      return;
+    }
+
+    if (correct === total && total > 0) {
+      feedback.textContent = "Doskonale! Wszystkie testy są poprawnie przypisane do odpowiednich User Stories.";
+      feedback.className = "feedback ok";
+      state.score += 20;
+      updateScoreDisplay();
+      animateSuccess(feedback);
+      setTimeout(() => {
+        goToRoom("conflict");
+      }, 1500);
+    } else {
+      feedback.textContent = `Poprawnie przypisano testy dla ${correct} z ${total} User Stories. Testy powinny być przypisane do odpowiednich historii użytkownika.`;
+      feedback.className = "feedback error";
+      state.score -= 5;
+      updateScoreDisplay();
+      animateError(feedback);
+    }
+
+    // Usuń klasy po chwili
+    setTimeout(() => {
+      storyTestPairs.forEach((pair) => {
+        pair.classList.remove("correct-pair", "wrong-pair");
+      });
+    }, 2000);
+  });
+}
+
+// Pokój 4 – Konflikt PO–Dev
 function bindConflictRoom() {
   const buttons = document.querySelectorAll(".choice-btn");
   const feedback = $("#feedback-conflict");
@@ -500,7 +851,10 @@ function bindConflictRoom() {
         feedback.className = "feedback ok";
         state.score += 20;
         updateScoreDisplay();
-        endGame(true);
+        animateSuccess(feedback);
+        setTimeout(() => {
+          endGame(true);
+        }, 1500);
       } else if (choice === "delay") {
         btn.classList.add("wrong");
         feedback.textContent =
@@ -521,10 +875,10 @@ function bindConflictRoom() {
   });
 }
 
-// Drag & Drop dla backlogu i stories
+// Drag & Drop dla backlogu, stories i testów
 function initDragAndDrop() {
   const cards = document.querySelectorAll(".card");
-  const droppables = document.querySelectorAll(".droppable, #product-backlog, #stories-pool");
+  const droppables = document.querySelectorAll(".droppable, #product-backlog, #stories-pool, #tests-pool, .test-list");
 
   cards.forEach((card) => {
     card.addEventListener("dragstart", () => {
@@ -550,6 +904,20 @@ function initDragAndDrop() {
       if (!dragging) return;
       zone.classList.remove("drag-over");
 
+      // Dla testów - sprawdź czy test pasuje do story
+      if (dragging.classList.contains("test-card") && zone.classList.contains("test-list")) {
+        const testStoryId = dragging.dataset.storyId;
+        const targetStoryId = zone.dataset.storyId;
+        
+        if (testStoryId === targetStoryId) {
+          // Prawidłowe przypisanie - dodaj wizualną informację
+          dragging.classList.add("correct-match");
+          setTimeout(() => {
+            dragging.classList.remove("correct-match");
+          }, 1000);
+        }
+      }
+
       // Prosta logika – zawsze można przenieść
       zone.appendChild(dragging);
       updateSprintPoints();
@@ -562,18 +930,85 @@ function goToRoom(key) {
   const rooms = document.querySelectorAll(".room");
   rooms.forEach((r) => r.classList.remove("active"));
 
-  if (key === "stories") {
-    $("#room-stories").classList.add("active");
-    state.sprint = 2;
-  } else if (key === "conflict") {
-    $("#room-conflict").classList.add("active");
-    state.sprint = 3;
-  } else {
+  if (key === "quiz") {
+    $("#room-quiz").classList.add("active");
+    state.sprint = 0;
+  } else if (key === "backlog") {
     $("#room-backlog").classList.add("active");
     state.sprint = 1;
+  } else if (key === "stories") {
+    $("#room-stories").classList.add("active");
+    state.sprint = 2;
+  } else if (key === "tests") {
+    $("#room-tests").classList.add("active");
+    state.sprint = 3;
+    // Pobierz User Stories z Sprintu do przypisania testów
+    updateTestsRoom();
+  } else if (key === "conflict") {
+    $("#room-conflict").classList.add("active");
+    state.sprint = 4;
+  } else {
+    $("#room-quiz").classList.add("active");
+    state.sprint = 0;
   }
 
-  $("#hud-sprint").textContent = state.sprint.toString();
+  $("#hud-sprint").textContent = (state.sprint + 1).toString();
+  updateProgressBar();
+}
+
+function updateTestsRoom() {
+  const storiesSprint = $("#stories-sprint");
+  const storiesContainer = $("#tests-stories-container");
+  if (!storiesContainer) return;
+
+  storiesContainer.innerHTML = "";
+  const sprintStories = Array.from(storiesSprint.querySelectorAll(".card"));
+  
+  sprintStories.forEach((storyCard) => {
+    const storyId = storyCard.dataset.id;
+    const storyText = storyCard.querySelector(".card-title")?.textContent || "";
+    
+    const pairDiv = document.createElement("div");
+    pairDiv.className = "story-test-pair";
+    pairDiv.dataset.storyId = storyId;
+    
+    pairDiv.innerHTML = `
+      <div class="story-card-in-test">
+        <div class="card-title">${storyText}</div>
+      </div>
+      <ul class="test-list droppable" data-story-id="${storyId}"></ul>
+    `;
+    
+    storiesContainer.appendChild(pairDiv);
+  });
+
+  initDragAndDrop();
+}
+
+// Animacje i efekty wizualne
+function animateSuccess(element) {
+  element.classList.add("animate-success");
+  setTimeout(() => {
+    element.classList.remove("animate-success");
+  }, 600);
+}
+
+function animateError(element) {
+  element.classList.add("animate-error");
+  setTimeout(() => {
+    element.classList.remove("animate-error");
+  }, 600);
+}
+
+function updateProgressBar() {
+  const progressBar = $("#progress-bar");
+  if (!progressBar) return;
+  
+  const totalRooms = 5;
+  const currentRoom = state.sprint;
+  const progress = ((currentRoom + 1) / totalRooms) * 100;
+  
+  progressBar.style.width = `${progress}%`;
 }
 
 // Restart gry
@@ -582,9 +1017,10 @@ function bindRestart() {
   btnRestart.addEventListener("click", () => {
     // Reset stanu
     state.score = 0;
-    state.sprint = 1;
+    state.sprint = 0;
     state.timerSeconds = 10 * 60;
     state.finished = false;
+    state.quizAnswers = {};
 
     $("#hud-score").textContent = "0";
     $("#hud-sprint").textContent = "1";
@@ -594,17 +1030,34 @@ function bindRestart() {
     $("#screen-start").classList.add("active");
 
     // Opróżnij listy i zbuduj na nowo
+    if ($("#quiz-container")) {
+      $("#quiz-container").innerHTML = "";
+    }
     $("#sprint-backlog").innerHTML = "";
     $("#stories-sprint").innerHTML = "";
     $("#stories-later").innerHTML = "";
+    if ($("#tests-stories-container")) {
+      $("#tests-stories-container").innerHTML = "";
+    }
+    buildQuiz();
     buildBacklog();
     buildStories();
+    buildTests();
+    if ($("#feedback-quiz")) {
+      $("#feedback-quiz").textContent = "";
+      $("#feedback-quiz").className = "feedback";
+    }
     $("#feedback-backlog").textContent = "";
     $("#feedback-backlog").className = "feedback";
     $("#feedback-stories").textContent = "";
     $("#feedback-stories").className = "feedback";
+    if ($("#feedback-tests")) {
+      $("#feedback-tests").textContent = "";
+      $("#feedback-tests").className = "feedback";
+    }
     $("#feedback-conflict").textContent = "";
     $("#feedback-conflict").className = "feedback";
+    updateProgressBar();
   });
 }
 
@@ -965,15 +1418,28 @@ function startMultiplayerGame() {
   state.startTimestamp = Date.now();
   state.finished = false;
   state.score = 0;
-  state.sprint = 1;
+  state.sprint = 0;
   state.timerSeconds = 10 * 60;
+  state.quizAnswers = {};
 
   // Reset pokoi
+  if ($("#quiz-container")) {
+    $("#quiz-container").innerHTML = "";
+  }
   $("#sprint-backlog").innerHTML = "";
   $("#stories-sprint").innerHTML = "";
   $("#stories-later").innerHTML = "";
+  if ($("#tests-stories-container")) {
+    $("#tests-stories-container").innerHTML = "";
+  }
+  buildQuiz();
   buildBacklog();
   buildStories();
+  buildTests();
+  
+  // Upewnij się, że jesteśmy w pokoju 0 (quiz)
+  goToRoom("quiz");
+  updateProgressBar();
 
   startTimer();
 }

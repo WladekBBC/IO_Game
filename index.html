@@ -58,6 +58,12 @@
           <span class="hud-label">Punkty:</span>
           <span id="hud-score" class="hud-value">0</span>
         </div>
+        <div class="hud-group hud-progress-group">
+          <span class="hud-label">Postęp:</span>
+          <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
         <!-- Multiplayer HUD -->
         <div id="hud-multiplayer" class="hud-multiplayer hidden">
           <div class="hud-vs">VS</div>
@@ -72,8 +78,35 @@
 
       <!-- Ekran gry / pokoje -->
       <section id="screen-game" class="screen">
+        <!-- Pokój 0: Quiz wprowadzający -->
+        <div id="room-quiz" class="room active">
+          <div class="panel panel-wide">
+            <h2>Pokój 0: Quiz wprowadzający</h2>
+            <p class="room-desc">
+              Odpowiedz na pytania dotyczące podstaw Agile, aby rozpocząć grę.
+            </p>
+
+            <div id="quiz-container" class="quiz-container">
+              <!-- Wypełniane z JS -->
+            </div>
+
+            <div class="edu-box">
+              <h4>Wiedza: Podstawy Agile</h4>
+              <p>
+                Agile to metodologia zarządzania projektami oparta na iteracyjnym i przyrostowym podejściu.
+                W Agile ważne są: MVP (Minimum Viable Product), User Stories, iteracyjne dostarczanie wartości.
+              </p>
+            </div>
+
+            <button id="btn-validate-quiz" class="btn primary">
+              Zatwierdź odpowiedzi
+            </button>
+            <p id="feedback-quiz" class="feedback"></p>
+          </div>
+        </div>
+
         <!-- Pokój 1: Sprint Backlog -->
-        <div id="room-backlog" class="room active">
+        <div id="room-backlog" class="room">
           <div class="panel panel-wide">
             <h2>Pokój 1: Ułóż Sprint Backlog</h2>
             <p class="room-desc">
@@ -176,10 +209,49 @@
           </div>
         </div>
 
-        <!-- Pokój 3: Konflikt PO–Dev -->
+        <!-- Pokój 3: Przypisz Testy -->
+        <div id="room-tests" class="room">
+          <div class="panel panel-wide">
+            <h2>Pokój 3: Przypisz Testy do User Stories</h2>
+            <p class="room-desc">
+              Każda User Story w Sprintcie musi mieć odpowiednie testy. Przypisz testy jednostkowe, integracyjne i E2E do odpowiednich User Stories.
+            </p>
+
+            <div class="columns columns-tests">
+              <div class="column">
+                <h3>Dostępne Testy</h3>
+                <ul id="tests-pool" class="card-list">
+                  <!-- z JS -->
+                </ul>
+              </div>
+              <div class="column column-stories-tests">
+                <h3>User Stories w Sprintcie</h3>
+                <div id="tests-stories-container" class="stories-tests-container">
+                  <!-- z JS -->
+                </div>
+              </div>
+            </div>
+
+            <div class="edu-box">
+              <h4>Wiedza: Rodzaje Testów</h4>
+              <ul>
+                <li><strong>Testy jednostkowe (Unit)</strong> – testują pojedyncze komponenty w izolacji.</li>
+                <li><strong>Testy integracyjne (Integration)</strong> – testują współpracę między komponentami.</li>
+                <li><strong>Testy E2E (End-to-End)</strong> – testują pełny przepływ użytkownika przez aplikację.</li>
+              </ul>
+            </div>
+
+            <button id="btn-validate-tests" class="btn primary">
+              Zatwierdź przypisanie testów
+            </button>
+            <p id="feedback-tests" class="feedback"></p>
+          </div>
+        </div>
+
+        <!-- Pokój 4: Konflikt PO–Dev -->
         <div id="room-conflict" class="room">
           <div class="panel panel-wide">
-            <h2>Pokój 3: Rozwiąż konflikt PO–Dev</h2>
+            <h2>Pokój 4: Rozwiąż konflikt PO–Dev</h2>
             <p class="room-desc">
               Release za chwilę, a część funkcji jest nieukończona. Product Owner
               naciska, żeby „wrzucić wszystko”, zespół deweloperski boi się
