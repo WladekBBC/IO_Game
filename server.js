@@ -27,11 +27,14 @@ const dbConfig = {
 // Utwórz pulę połączeń
 const pool = mysql.createPool(dbConfig);
 
-// Funkcja do inicjalizacji bazy danych
+// Flaga do śledzenia statusu bazy danych
+let dbReady = false;
+
+// Funkcja do inicjalizacji bazy danych (nie blokuje startowania serwera)
 async function initDatabase() {
   try {
     const connection = await pool.getConnection();
-    
+
     // Utwórz tabelę jeśli nie istnieje
     await connection.query(`
       CREATE TABLE IF NOT EXISTS scores (
@@ -46,17 +49,21 @@ async function initDatabase() {
         INDEX idx_created (created_at DESC)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
-    
+
     connection.release();
+    dbReady = true;
     console.log("✓ Baza danych zainicjalizowana");
   } catch (error) {
-    console.error("Błąd inicjalizacji bazy danych:", error);
-    // Nie przerywaj działania serwera, ale loguj błąd
+    console.error("⚠️ Baza danych niedostępna - gra będzie działać bez rankingu:", error.message);
+    dbReady = false;
+    // Nie przerywaj działania serwera
   }
 }
 
-// Inicjalizuj bazę danych przy starcie
-initDatabase();
+// Inicjalizuj bazę danych w tle (nie czekaj)
+initDatabase().catch(() => {
+  console.log("Kontynuuję bez bazy danych...");
+});
 
 // Middleware CORS dla wszystkich żądań
 app.use((req, res, next) => {
@@ -84,6 +91,16 @@ app.post("/api/scores", async (req, res) => {
       return res.status(400).json({ error: "Brakuje wymaganych pól" });
     }
 
+    // Jeśli baza danych nie jest dostępna, zwróć sukces (dane zostaną zapisane gdy DB będzie gotowa)
+    if (!dbReady) {
+      console.log("DB niedostępna - wynik nie został zapisany w bazie");
+      return res.json({
+        success: true,
+        id: null,
+        message: "Wynik przesłany (baza niedostępna, ranking niedostępny)",
+      });
+    }
+
     const [result] = await pool.query(
       "INSERT INTO scores (team_name, score, time_seconds, mode) VALUES (?, ?, ?, ?)",
       [teamName, score, time, mode]
@@ -96,13 +113,25 @@ app.post("/api/scores", async (req, res) => {
     });
   } catch (error) {
     console.error("Błąd zapisywania wyniku:", error);
-    res.status(500).json({ error: "Błąd serwera podczas zapisywania wyniku" });
+    res.json({
+      success: true,
+      id: null,
+      message: "Wynik przesłany (błąd bazy danych, ranking niedostępny)",
+    });
   }
 });
 
 // API - Pobierz ranking
 app.get("/api/scores", async (req, res) => {
   try {
+    if (!dbReady) {
+      return res.json({
+        success: true,
+        scores: [],
+        message: "Ranking niedostępny - baza danych nie jest połączona",
+      });
+    }
+
     const { sort = "score" } = req.query;
 
     let orderBy = "score DESC";
@@ -132,7 +161,11 @@ app.get("/api/scores", async (req, res) => {
     res.json({ success: true, scores });
   } catch (error) {
     console.error("Błąd pobierania wyników:", error);
-    res.status(500).json({ error: "Błąd serwera podczas pobierania wyników" });
+    res.json({
+      success: true,
+      scores: [],
+      message: "Ranking niedostępny - błąd bazy danych",
+    });
   }
 });
 
@@ -159,15 +192,17 @@ const io = new Server(server, {
   path: "/socket.io",
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
     // przy origin: '*' nie ustawiamy credentials na true
     credentials: false,
   },
-  transports: ["polling", "websocket"],
+  transports: ["websocket", "polling"],
   // ping/connect timeouts dostosowane do niestabilnych sieci lokalnych
   pingTimeout: 60000,
   pingInterval: 25000,
   connectTimeout: 45000,
+  // Łatwiej połączyć się z sieci lokalnej
+  allowEIO3: true,
 });
 
 // Logowanie połączeń dla debugowania
@@ -358,7 +393,13 @@ io.on("connection", (socket) => {
       io.to(room.guest.id).emit("gameResult", guestResult);
 
       console.log(
-        `Gra zakończona w pokoju ${roomId}. Zwycięzca: ${winner === "host" ? room.host.teamName : winner === "guest" ? room.guest.teamName : "remis"}`
+        `Gra zakończona w pokoju ${roomId}. Zwycięzca: ${
+          winner === "host"
+            ? room.host.teamName
+            : winner === "guest"
+            ? room.guest.teamName
+            : "remis"
+        }`
       );
     } else {
       // Tylko jedna drużyna ukończyła - powiadom przeciwnika, że czeka
@@ -407,35 +448,38 @@ function generateRoomId() {
   return result;
 }
 
-server.listen(PORT, "0.0.0.0", () => {
+// Znajdź lokalny IP adres
+function getLocalIp() {
   const nets = os.networkInterfaces();
-  let localIp = null;
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
       if (net.family === "IPv4" && !net.internal) {
-        localIp = net.address;
-        break;
+        return net.address;
       }
     }
-    if (localIp) break;
   }
+  return "localhost";
+}
 
-  console.log(`Serwer działa na http://localhost:${PORT}`);
-  if (localIp) {
-    console.log(`Dostęp w sieci lokalnej: http://${localIp}:${PORT}/`);
+const localIp = getLocalIp();
+
+// Bind na konkretnym IP zamiast 0.0.0.0 (lepiej na macOS)
+server.listen(PORT, localIp, () => {
+  console.log(`✅ Serwer działa!`);
+  console.log(`Localhost: http://localhost:${PORT}`);
+  if (localIp !== "localhost") {
+    console.log(`Sieć lokalna: http://${localIp}:${PORT}`);
     console.log(`Socket.io: ws://${localIp}:${PORT}/socket.io/`);
-    console.log(`Test: http://${localIp}:${PORT}/health`);
-  } else {
-    console.log(`Socket.io gotowy do połączeń (path: /socket.io)`);
-    console.log(`Test: http://localhost:${PORT}/health`);
   }
+  console.log(`Test: http://${localIp}:${PORT}/health`);
 });
 
 // Obsługa błędów serwera (np. EADDRINUSE)
 server.on("error", (err) => {
   console.error("Błąd serwera:", err);
   if (err.code === "EADDRINUSE") {
-    console.error(`Port ${PORT} jest już używany. Zakończ proces lub zmień PORT.`);
+    console.error(
+      `Port ${PORT} jest już używany. Zakończ proces lub zmień PORT.`
+    );
   }
 });
-

@@ -1234,10 +1234,10 @@ function initMultiplayer() {
     console.log("Łączenie z Socket.io:", socketUrl);
     
     state.socket = io(socketUrl, {
-      transports: ["polling"], // Polling najpierw, potem websocket
+      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       timeout: 20000,
       forceNew: false,
     });
