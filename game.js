@@ -362,8 +362,7 @@ function showWaitingForOpponent() {
   );
 
   endTitle.textContent = "Ukończyłeś grę!";
-  endSummary.textContent =
-    "Czekasz na zakończenie gry przez przeciwnika...";
+  endSummary.textContent = "Czekasz na zakończenie gry przez przeciwnika...";
 
   $("#end-multiplayer-result").classList.add("hidden");
   $("#end-waiting-opponent").classList.remove("hidden");
@@ -444,12 +443,14 @@ function showMultiplayerResult(result) {
     endWinner.textContent = "🏆 Wygrałeś!";
     endWinner.style.color = "#4ade80";
     endTitle.textContent = "Gratulacje! Wygrałeś!";
-    endSummary.textContent = "Twój zespół pokonał przeciwnika w Escape Room: Release Day!";
+    endSummary.textContent =
+      "Twój zespół pokonał przeciwnika w Escape Room: Release Day!";
   } else {
     endWinner.textContent = "Przegrałeś. Spróbuj ponownie!";
     endWinner.style.color = "#fb7185";
     endTitle.textContent = "Przegrana";
-    endSummary.textContent = "Przeciwnik zdobył więcej punktów lub ukończył szybciej. Spróbuj ponownie!";
+    endSummary.textContent =
+      "Przeciwnik zdobył więcej punktów lub ukończył szybciej. Spróbuj ponownie!";
   }
 
   // Usuń poprzedni powód jeśli istnieje
@@ -476,28 +477,38 @@ function showMultiplayerResult(result) {
 function buildQuiz() {
   const quizContainer = $("#quiz-container");
   if (!quizContainer) return;
-  
+
   quizContainer.innerHTML = "";
-  
+
   QUIZ_QUESTIONS.forEach((question, index) => {
     const questionDiv = document.createElement("div");
     questionDiv.className = "quiz-question";
     questionDiv.dataset.questionId = question.id;
-    
-    let optionsHtml = question.options.map((option) => `
+
+    let optionsHtml = question.options
+      .map(
+        (option) => `
       <label class="quiz-option">
-        <input type="radio" name="quiz-${question.id}" value="${option.id}" data-correct="${option.correct}">
-        <span class="option-text">${option.id.toUpperCase()}) ${option.text}</span>
+        <input type="radio" name="quiz-${question.id}" value="${
+          option.id
+        }" data-correct="${option.correct}">
+        <span class="option-text">${option.id.toUpperCase()}) ${
+          option.text
+        }</span>
       </label>
-    `).join("");
-    
+    `
+      )
+      .join("");
+
     questionDiv.innerHTML = `
-      <h3 class="quiz-question-title">Pytanie ${index + 1}: ${question.question}</h3>
+      <h3 class="quiz-question-title">Pytanie ${index + 1}: ${
+      question.question
+    }</h3>
       <div class="quiz-options">
         ${optionsHtml}
       </div>
     `;
-    
+
     quizContainer.appendChild(questionDiv);
   });
 }
@@ -506,19 +517,21 @@ function bindQuizLogic() {
   const btnValidate = $("#btn-validate-quiz");
   if (!btnValidate) return;
   const feedback = $("#feedback-quiz");
-  
+
   btnValidate.addEventListener("click", () => {
     let correct = 0;
     let total = QUIZ_QUESTIONS.length;
     let allAnswered = true;
-    
+
     QUIZ_QUESTIONS.forEach((question) => {
-      const selected = document.querySelector(`input[name="quiz-${question.id}"]:checked`);
+      const selected = document.querySelector(
+        `input[name="quiz-${question.id}"]:checked`
+      );
       if (!selected) {
         allAnswered = false;
         return;
       }
-      
+
       const isCorrect = selected.dataset.correct === "true";
       if (isCorrect) {
         correct++;
@@ -526,22 +539,26 @@ function bindQuizLogic() {
       } else {
         selected.closest(".quiz-option").classList.add("wrong");
         // Pokaż poprawną odpowiedź
-        const correctOption = document.querySelector(`input[name="quiz-${question.id}"][data-correct="true"]`);
+        const correctOption = document.querySelector(
+          `input[name="quiz-${question.id}"][data-correct="true"]`
+        );
         if (correctOption) {
           correctOption.closest(".quiz-option").classList.add("correct-answer");
         }
       }
     });
-    
+
     if (!allAnswered) {
-      feedback.textContent = "Odpowiedz na wszystkie pytania przed zatwierdzeniem.";
+      feedback.textContent =
+        "Odpowiedz na wszystkie pytania przed zatwierdzeniem.";
       feedback.className = "feedback error";
       animateError(feedback);
       return;
     }
-    
+
     if (correct === total) {
-      feedback.textContent = "Doskonale! Wszystkie odpowiedzi są poprawne. Możesz przejść dalej.";
+      feedback.textContent =
+        "Doskonale! Wszystkie odpowiedzi są poprawne. Możesz przejść dalej.";
       feedback.className = "feedback ok";
       state.score += 15;
       updateScoreDisplay();
@@ -555,14 +572,18 @@ function bindQuizLogic() {
       state.score += correct * 3; // 3 punkty za każde poprawne
       updateScoreDisplay();
       animateError(feedback);
-      
+
       // Reset po 3 sekundach
       setTimeout(() => {
         QUIZ_QUESTIONS.forEach((question) => {
-          const options = document.querySelectorAll(`input[name="quiz-${question.id}"]`);
+          const options = document.querySelectorAll(
+            `input[name="quiz-${question.id}"]`
+          );
           options.forEach((option) => {
             option.checked = false;
-            option.closest(".quiz-option").classList.remove("correct", "wrong", "correct-answer");
+            option
+              .closest(".quiz-option")
+              .classList.remove("correct", "wrong", "correct-answer");
           });
         });
         feedback.textContent = "";
@@ -726,7 +747,7 @@ function buildTests() {
   state.tests = TESTS.map((t) => ({ ...t }));
   const testsPool = $("#tests-pool");
   if (!testsPool) return;
-  
+
   testsPool.innerHTML = "";
 
   state.tests.forEach((test) => {
@@ -736,10 +757,20 @@ function buildTests() {
     li.dataset.id = test.id;
     li.dataset.storyId = test.storyId;
     li.dataset.type = test.type;
-    
-    const typeLabel = test.type === "unit" ? "Unit" : test.type === "integration" ? "Integration" : "E2E";
-    const typeColor = test.type === "unit" ? "#22c55e" : test.type === "integration" ? "#3b82f6" : "#a855f7";
-    
+
+    const typeLabel =
+      test.type === "unit"
+        ? "Unit"
+        : test.type === "integration"
+        ? "Integration"
+        : "E2E";
+    const typeColor =
+      test.type === "unit"
+        ? "#22c55e"
+        : test.type === "integration"
+        ? "#3b82f6"
+        : "#a855f7";
+
     li.innerHTML = `
       <div class="card-title">${test.text}</div>
       <div class="card-meta">
@@ -765,10 +796,12 @@ function bindTestsLogic() {
     storyTestPairs.forEach((pair) => {
       const storyId = pair.dataset.storyId;
       const testCards = Array.from(pair.querySelectorAll(".test-card"));
-      
+
       if (testCards.length > 0) {
         total++;
-        const isCorrect = testCards.some((card) => card.dataset.storyId === storyId);
+        const isCorrect = testCards.some(
+          (card) => card.dataset.storyId === storyId
+        );
         if (isCorrect) {
           correct++;
           pair.classList.add("correct-pair");
@@ -781,7 +814,7 @@ function bindTestsLogic() {
     // Sprawdź czy wszystkie testy są przypisane
     const testsPool = $("#tests-pool");
     const unassignedTests = testsPool.querySelectorAll(".test-card");
-    
+
     if (unassignedTests.length > 0) {
       feedback.textContent = `Nie wszystkie testy zostały przypisane. Przypisz testy do odpowiednich User Stories.`;
       feedback.className = "feedback error";
@@ -797,7 +830,8 @@ function bindTestsLogic() {
     });
 
     if (!allHaveTests) {
-      feedback.textContent = "Każda User Story w Sprintcie powinna mieć przypisane testy.";
+      feedback.textContent =
+        "Każda User Story w Sprintcie powinna mieć przypisane testy.";
       feedback.className = "feedback error";
       state.score -= 3;
       updateScoreDisplay();
@@ -806,7 +840,8 @@ function bindTestsLogic() {
     }
 
     if (correct === total && total > 0) {
-      feedback.textContent = "Doskonale! Wszystkie testy są poprawnie przypisane do odpowiednich User Stories.";
+      feedback.textContent =
+        "Doskonale! Wszystkie testy są poprawnie przypisane do odpowiednich User Stories.";
       feedback.className = "feedback ok";
       state.score += 20;
       updateScoreDisplay();
@@ -862,7 +897,10 @@ function bindConflictRoom() {
         feedback.className = "feedback error";
         state.score += 5;
         updateScoreDisplay();
-        endGame(true, "Udało się dowieźć release, ale z opóźnieniem – warto lepiej planować Sprinty.");
+        endGame(
+          true,
+          "Udało się dowieźć release, ale z opóźnieniem – warto lepiej planować Sprinty."
+        );
       } else {
         btn.classList.add("wrong");
         feedback.textContent =
@@ -878,7 +916,9 @@ function bindConflictRoom() {
 // Drag & Drop dla backlogu, stories i testów
 function initDragAndDrop() {
   const cards = document.querySelectorAll(".card");
-  const droppables = document.querySelectorAll(".droppable, #product-backlog, #stories-pool, #tests-pool, .test-list");
+  const droppables = document.querySelectorAll(
+    ".droppable, #product-backlog, #stories-pool, #tests-pool, .test-list"
+  );
 
   cards.forEach((card) => {
     card.addEventListener("dragstart", () => {
@@ -905,10 +945,13 @@ function initDragAndDrop() {
       zone.classList.remove("drag-over");
 
       // Dla testów - sprawdź czy test pasuje do story
-      if (dragging.classList.contains("test-card") && zone.classList.contains("test-list")) {
+      if (
+        dragging.classList.contains("test-card") &&
+        zone.classList.contains("test-list")
+      ) {
         const testStoryId = dragging.dataset.storyId;
         const targetStoryId = zone.dataset.storyId;
-        
+
         if (testStoryId === targetStoryId) {
           // Prawidłowe przypisanie - dodaj wizualną informację
           dragging.classList.add("correct-match");
@@ -963,22 +1006,22 @@ function updateTestsRoom() {
 
   storiesContainer.innerHTML = "";
   const sprintStories = Array.from(storiesSprint.querySelectorAll(".card"));
-  
+
   sprintStories.forEach((storyCard) => {
     const storyId = storyCard.dataset.id;
     const storyText = storyCard.querySelector(".card-title")?.textContent || "";
-    
+
     const pairDiv = document.createElement("div");
     pairDiv.className = "story-test-pair";
     pairDiv.dataset.storyId = storyId;
-    
+
     pairDiv.innerHTML = `
       <div class="story-card-in-test">
         <div class="card-title">${storyText}</div>
       </div>
       <ul class="test-list droppable" data-story-id="${storyId}"></ul>
     `;
-    
+
     storiesContainer.appendChild(pairDiv);
   });
 
@@ -1003,11 +1046,11 @@ function animateError(element) {
 function updateProgressBar() {
   const progressBar = $("#progress-bar");
   if (!progressBar) return;
-  
+
   const totalRooms = 5;
   const currentRoom = state.sprint;
   const progress = ((currentRoom + 1) / totalRooms) * 100;
-  
+
   progressBar.style.width = `${progress}%`;
 }
 
@@ -1064,6 +1107,7 @@ function bindRestart() {
 // Ranking - zapisywanie i wyświetlanie (MySQL przez API)
 async function saveScore(teamName, score, time, mode) {
   try {
+    console.log(" Wysyłam wynik:", { teamName, score, time, mode });
     const response = await fetch("/api/scores", {
       method: "POST",
       headers: {
@@ -1077,15 +1121,19 @@ async function saveScore(teamName, score, time, mode) {
       }),
     });
 
+    console.log(
+      `📊 Odpowiedź serwera: status ${response.status}, ok=${response.ok}`
+    );
+
     if (!response.ok) {
-      console.error("Błąd zapisywania wyniku:", response.statusText);
+      console.error("❌ Błąd zapisywania wyniku:", response.statusText);
       // Fallback do localStorage jeśli API nie działa
       saveScoreLocalStorage(teamName, score, time, mode);
       return;
     }
 
     const result = await response.json();
-    console.log("Wynik zapisany:", result);
+    console.log("✅ Wynik zapisany:", result);
   } catch (error) {
     console.error("Błąd zapisywania wyniku:", error);
     // Fallback do localStorage jeśli API nie działa
@@ -1096,7 +1144,7 @@ async function saveScore(teamName, score, time, mode) {
 async function getScores(sortBy = "score") {
   try {
     const response = await fetch(`/api/scores?sort=${sortBy}`);
-    
+
     if (!response.ok) {
       console.error("Błąd pobierania wyników:", response.statusText);
       // Fallback do localStorage
@@ -1166,7 +1214,8 @@ async function showRanking() {
   const emptyMsg = $("#ranking-empty");
 
   // Pokaż wskaźnik ładowania
-  tbody.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 20px;'>Ładowanie wyników...</td></tr>";
+  tbody.innerHTML =
+    "<tr><td colspan='6' style='text-align: center; padding: 20px;'>Ładowanie wyników...</td></tr>";
 
   try {
     const scores = await getScores(sortBy);
@@ -1191,7 +1240,11 @@ async function showRanking() {
         minute: "2-digit",
       });
       const modeLabel =
-        entry.mode === "multiplayer" ? "Multiplayer" : entry.mode === "versus" ? "Versus" : "Solo";
+        entry.mode === "multiplayer"
+          ? "Multiplayer"
+          : entry.mode === "versus"
+          ? "Versus"
+          : "Solo";
 
       tr.innerHTML = `
         <td>${index + 1}</td>
@@ -1205,7 +1258,8 @@ async function showRanking() {
     });
   } catch (error) {
     console.error("Błąd wyświetlania rankingu:", error);
-    tbody.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 20px; color: #fb7185;'>Błąd ładowania wyników</td></tr>";
+    tbody.innerHTML =
+      "<tr><td colspan='6' style='text-align: center; padding: 20px; color: #fb7185;'>Błąd ładowania wyników</td></tr>";
   }
 }
 
@@ -1232,7 +1286,7 @@ function initMultiplayer() {
     // Użyj aktualnego hosta i portu
     const socketUrl = window.location.origin;
     console.log("Łączenie z Socket.io:", socketUrl);
-    
+
     state.socket = io(socketUrl, {
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -1241,7 +1295,7 @@ function initMultiplayer() {
       timeout: 20000,
       forceNew: false,
     });
-    
+
     setupSocketListeners();
   } catch (e) {
     console.error("Błąd inicjalizacji Socket.io:", e);
@@ -1436,7 +1490,7 @@ function startMultiplayerGame() {
   buildBacklog();
   buildStories();
   buildTests();
-  
+
   // Upewnij się, że jesteśmy w pokoju 0 (quiz)
   goToRoom("quiz");
   updateProgressBar();
@@ -1444,7 +1498,4 @@ function startMultiplayerGame() {
   startTimer();
 }
 
-
 document.addEventListener("DOMContentLoaded", init);
-
-
