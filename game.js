@@ -913,13 +913,36 @@ function bindConflictRoom() {
   });
 }
 
-// Drag & Drop dla backlogu, stories i testów
+// Drag & Drop dla backlogu, stories i testów (Desktop + Mobile)
+let touchState = {
+  dragging: null,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+function disableTouchScroll() {
+  document.body.style.overscrollBehavior = "none";
+  document.addEventListener("touchmove", preventScroll, { passive: false });
+}
+
+function enableTouchScroll() {
+  document.body.style.overscrollBehavior = "auto";
+  document.removeEventListener("touchmove", preventScroll);
+}
+
+function preventScroll(e) {
+  if (touchState.dragging) {
+    e.preventDefault();
+  }
+}
+
 function initDragAndDrop() {
   const cards = document.querySelectorAll(".card");
   const droppables = document.querySelectorAll(
     ".droppable, #product-backlog, #stories-pool, #tests-pool, .test-list"
   );
 
+  // Desktop: Drag & Drop API
   cards.forEach((card) => {
     card.addEventListener("dragstart", () => {
       card.classList.add("dragging");
@@ -928,8 +951,106 @@ function initDragAndDrop() {
       card.classList.remove("dragging");
       updateSprintPoints();
     });
+
+    // Mobile: Touch Events
+    card.addEventListener("touchstart", (e) => {
+      touchState.dragging = card;
+      touchState.offsetX = e.touches[0].clientX - card.getBoundingClientRect().left;
+      touchState.offsetY = e.touches[0].clientY - card.getBoundingClientRect().top;
+      card.classList.add("dragging");
+      card.style.zIndex = "10000";
+      disableTouchScroll();
+    });
+
+    card.addEventListener("touchmove", (e) => {
+      if (!touchState.dragging) return;
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const rect = card.getBoundingClientRect();
+      card.style.position = "fixed";
+      card.style.top = touch.clientY - touchState.offsetY + "px";
+      card.style.left = touch.clientX - touchState.offsetX + "px";
+
+      // Sprawdź, czy jesteśmy nad dropzone
+      droppables.forEach((zone) => {
+        const zoneRect = zone.getBoundingClientRect();
+        const isOver =
+          touch.clientX >= zoneRect.left &&
+          touch.clientX <= zoneRect.right &&
+          touch.clientY >= zoneRect.top &&
+          touch.clientY <= zoneRect.bottom;
+
+        if (isOver) {
+          zone.classList.add("drag-over");
+        } else {
+          zone.classList.remove("drag-over");
+        }
+      });
+    });
+
+    card.addEventListener("touchend", (e) => {
+      if (!touchState.dragging) return;
+
+      const touch = e.changedTouches[0];
+      let dropped = false;
+
+      // Sprawdź, nad jaką strefą skończy się dotyk
+      droppables.forEach((zone) => {
+        const zoneRect = zone.getBoundingClientRect();
+        const isOver =
+          touch.clientX >= zoneRect.left &&
+          touch.clientX <= zoneRect.right &&
+          touch.clientY >= zoneRect.top &&
+          touch.clientY <= zoneRect.bottom;
+
+        if (isOver && !dropped) {
+          zone.classList.remove("drag-over");
+
+          // Dla testów - sprawdź czy test pasuje do story
+          if (
+            touchState.dragging.classList.contains("test-card") &&
+            zone.classList.contains("test-list")
+          ) {
+            const testStoryId = touchState.dragging.dataset.storyId;
+            const targetStoryId = zone.dataset.storyId;
+
+            if (testStoryId === targetStoryId) {
+              // Prawidłowe przypisanie - dodaj wizualną informację
+              touchState.dragging.classList.add("correct-match");
+              setTimeout(() => {
+                touchState.dragging.classList.remove("correct-match");
+              }, 1000);
+            }
+          }
+
+          // Przenieś kartę
+          card.style.position = "relative";
+          card.style.top = "auto";
+          card.style.left = "auto";
+          zone.appendChild(touchState.dragging);
+          dropped = true;
+          updateSprintPoints();
+        }
+      });
+
+      // Jeśli nie porzucono nad strefą, przywróć pozycję
+      if (!dropped) {
+        card.style.position = "relative";
+        card.style.top = "auto";
+        card.style.left = "auto";
+      }
+
+      // Wyczyść stan
+      card.classList.remove("dragging");
+      card.style.zIndex = "auto";
+      droppables.forEach((zone) => zone.classList.remove("drag-over"));
+      touchState.dragging = null;
+      enableTouchScroll();
+    });
   });
 
+  // Desktop: Drop zones
   droppables.forEach((zone) => {
     zone.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -1496,6 +1617,21 @@ function startMultiplayerGame() {
   updateProgressBar();
 
   startTimer();
+}
+
+// Obsługa touch na mobilu - zapobiega domyślnym zachowaniom
+if ('ontouchstart' in window) {
+  // Wyłącz podwójny tap zoom na przyciskach i input polach
+  document.addEventListener('touchend', (e) => {
+    if (e.target.tagName === 'BUTTON' || 
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'SELECT' ||
+        e.target.classList.contains('quiz-option') ||
+        e.target.classList.contains('card')) {
+      e.preventDefault();
+      e.target.click?.();
+    }
+  }, false);
 }
 
 document.addEventListener("DOMContentLoaded", init);
