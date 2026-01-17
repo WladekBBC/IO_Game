@@ -14,6 +14,9 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #app {
@@ -303,6 +306,7 @@ select:focus {
   min-height: 60px;
   max-height: 200px;
   overflow-y: auto;
+  touch-action: none;
 }
 
 .test-card {
@@ -353,6 +357,10 @@ select:focus {
   border: 1px solid rgba(191, 219, 254, 0.5);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.6);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
 }
 
 .card:hover:not(.dragging) {
@@ -367,6 +375,7 @@ select:focus {
 
 .card-title {
   font-weight: 600;
+  pointer-events: none;
 }
 
 .card-meta {
@@ -375,6 +384,7 @@ select:focus {
   font-size: 0.75rem;
   color: #e5e7eb;
   opacity: 0.9;
+  pointer-events: none;
 }
 
 .points-pill {
@@ -401,6 +411,10 @@ select:focus {
   border-style: solid;
   border-color: #38bdf8;
   background: rgba(15, 23, 42, 0.96);
+}
+
+.droppable {
+  touch-action: none;
 }
 
 .edu-box {
@@ -576,6 +590,7 @@ select:focus {
   flex-direction: column;
   gap: 24px;
   margin: 20px 0;
+  touch-action: manipulation;
 }
 
 .quiz-question {
@@ -584,6 +599,8 @@ select:focus {
   border-radius: 12px;
   padding: 16px;
   transition: border-color 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .quiz-question-title {
@@ -591,6 +608,8 @@ select:focus {
   margin-bottom: 12px;
   color: #e5e7eb;
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .quiz-options {
@@ -609,6 +628,10 @@ select:focus {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .quiz-option:hover {
@@ -623,6 +646,7 @@ select:focus {
   width: 18px;
   height: 18px;
   accent-color: #38bdf8;
+  touch-action: manipulation;
 }
 
 .quiz-option .option-text {
@@ -630,6 +654,7 @@ select:focus {
   font-size: 0.9rem;
   color: #e5e7eb;
   line-height: 1.5;
+  pointer-events: none;
 }
 
 .quiz-option.correct {
@@ -642,6 +667,11 @@ select:focus {
   background: rgba(251, 113, 133, 0.15);
   border-color: #fb7185;
   animation: shake 0.5s ease;
+}
+
+.quiz-option.selected {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #38bdf8;
 }
 
 .quiz-option.correct-answer {
