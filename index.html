@@ -3,9 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <title>Escape Room: Release Day</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -21,14 +27,20 @@
           <div class="start-form">
             <label>
               Nazwa zespołu:
-              <input type="text" id="team-name" placeholder="np. Agile Ninjas" />
+              <input
+                type="text"
+                id="team-name"
+                placeholder="np. Agile Ninjas"
+              />
             </label>
             <label>
               Tryb:
               <select id="mode-select">
                 <option value="solo">Solo</option>
                 <option value="versus">Rywalizacja (na czas / punkty)</option>
-                <option value="multiplayer">Multiplayer (2 drużyny online)</option>
+                <option value="multiplayer">
+                  Multiplayer (2 drużyny online)
+                </option>
               </select>
             </label>
           </div>
@@ -95,8 +107,10 @@
             <div class="edu-box">
               <h4>Wiedza: Podstawy Agile</h4>
               <p>
-                Agile to metodologia zarządzania projektami oparta na iteracyjnym i przyrostowym podejściu.
-                W Agile ważne są: MVP (Minimum Viable Product), User Stories, iteracyjne dostarczanie wartości.
+                Agile to metodologia zarządzania projektami oparta na
+                iteracyjnym i przyrostowym podejściu. W Agile ważne są: MVP
+                (Minimum Viable Product), User Stories, iteracyjne dostarczanie
+                wartości.
               </p>
             </div>
 
@@ -140,9 +154,18 @@
             <div class="edu-box">
               <h4>Wiedza: Artefakty Scrum</h4>
               <ul>
-                <li><strong>Product Backlog</strong> – uporządkowana lista tego, co może być potrzebne w produkcie.</li>
-                <li><strong>Sprint Backlog</strong> – wybrane elementy na dany Sprint + plan ich realizacji.</li>
-                <li><strong>Increment</strong> – gotowy, potencjalnie wdrażalny fragment produktu.</li>
+                <li>
+                  <strong>Product Backlog</strong> – uporządkowana lista tego,
+                  co może być potrzebne w produkcie.
+                </li>
+                <li>
+                  <strong>Sprint Backlog</strong> – wybrane elementy na dany
+                  Sprint + plan ich realizacji.
+                </li>
+                <li>
+                  <strong>Increment</strong> – gotowy, potencjalnie wdrażalny
+                  fragment produktu.
+                </li>
               </ul>
             </div>
 
@@ -198,9 +221,9 @@
             <div class="edu-box">
               <h4>Wiedza: User Story i Cel Sprintu</h4>
               <p>
-                Dobrze zdefiniowany <strong>Cel Sprintu</strong> pomaga zespołowi
-                skupić się na tym, co najważniejsze. User Stories powinny
-                wnosić wartość bezpośrednio powiązaną z tym celem.
+                Dobrze zdefiniowany <strong>Cel Sprintu</strong> pomaga
+                zespołowi skupić się na tym, co najważniejsze. User Stories
+                powinny wnosić wartość bezpośrednio powiązaną z tym celem.
               </p>
             </div>
 
@@ -216,7 +239,9 @@
           <div class="panel panel-wide">
             <h2>Pokój 3: Przypisz Testy do User Stories</h2>
             <p class="room-desc">
-              Każda User Story w Sprintcie musi mieć odpowiednie testy. Przypisz testy jednostkowe, integracyjne i E2E do odpowiednich User Stories.
+              Każda User Story w Sprintcie musi mieć odpowiednie testy. Przypisz
+              testy jednostkowe, integracyjne i E2E do odpowiednich User
+              Stories.
             </p>
 
             <div class="columns columns-tests">
@@ -228,7 +253,10 @@
               </div>
               <div class="column column-stories-tests">
                 <h3>User Stories w Sprintcie</h3>
-                <div id="tests-stories-container" class="stories-tests-container">
+                <div
+                  id="tests-stories-container"
+                  class="stories-tests-container"
+                >
                   <!-- z JS -->
                 </div>
               </div>
@@ -237,9 +265,18 @@
             <div class="edu-box">
               <h4>Wiedza: Rodzaje Testów</h4>
               <ul>
-                <li><strong>Testy jednostkowe (Unit)</strong> – testują pojedyncze komponenty w izolacji.</li>
-                <li><strong>Testy integracyjne (Integration)</strong> – testują współpracę między komponentami.</li>
-                <li><strong>Testy E2E (End-to-End)</strong> – testują pełny przepływ użytkownika przez aplikację.</li>
+                <li>
+                  <strong>Testy jednostkowe (Unit)</strong> – testują pojedyncze
+                  komponenty w izolacji.
+                </li>
+                <li>
+                  <strong>Testy integracyjne (Integration)</strong> – testują
+                  współpracę między komponentami.
+                </li>
+                <li>
+                  <strong>Testy E2E (End-to-End)</strong> – testują pełny
+                  przepływ użytkownika przez aplikację.
+                </li>
               </ul>
             </div>
 
@@ -255,9 +292,9 @@
           <div class="panel panel-wide">
             <h2>Pokój 4: Rozwiąż konflikt PO–Dev</h2>
             <p class="room-desc">
-              Release za chwilę, a część funkcji jest nieukończona. Product Owner
-              naciska, żeby „wrzucić wszystko”, zespół deweloperski boi się
-              jakości. Wybierz takie działania, które są spójne ze Scrumem.
+              Release za chwilę, a część funkcji jest nieukończona. Product
+              Owner naciska, żeby „wrzucić wszystko”, zespół deweloperski boi
+              się jakości. Wybierz takie działania, które są spójne ze Scrumem.
             </p>
 
             <div class="dialogue">
@@ -289,9 +326,18 @@
             <div class="edu-box">
               <h4>Wiedza: Role Scrum & odpowiedzialność</h4>
               <ul>
-                <li><strong>Product Owner</strong> – maksymalizuje wartość produktu, decyduje o priorytetach.</li>
-                <li><strong>Developers</strong> – odpowiedzialni za jakość i techniczne aspekty Inkrementu.</li>
-                <li><strong>Scrum Master</strong> – dba o zrozumienie i stosowanie Scruma.</li>
+                <li>
+                  <strong>Product Owner</strong> – maksymalizuje wartość
+                  produktu, decyduje o priorytetach.
+                </li>
+                <li>
+                  <strong>Developers</strong> – odpowiedzialni za jakość i
+                  techniczne aspekty Inkrementu.
+                </li>
+                <li>
+                  <strong>Scrum Master</strong> – dba o zrozumienie i stosowanie
+                  Scruma.
+                </li>
               </ul>
             </div>
 
@@ -313,12 +359,23 @@
               <span id="end-time">00:00</span>
             </p>
             <div id="end-waiting-opponent" class="waiting-opponent hidden">
-              <p class="waiting-text">⏳ Czekasz na zakończenie gry przez przeciwnika...</p>
+              <p class="waiting-text">
+                ⏳ Czekasz na zakończenie gry przez przeciwnika...
+              </p>
             </div>
             <div id="end-multiplayer-result" class="multiplayer-result hidden">
-              <p><strong>Przeciwnik:</strong> <span id="end-opponent-name">—</span></p>
-              <p><strong>Punkty przeciwnika:</strong> <span id="end-opponent-score">0</span></p>
-              <p><strong>Czas przeciwnika:</strong> <span id="end-opponent-time">00:00</span></p>
+              <p>
+                <strong>Przeciwnik:</strong>
+                <span id="end-opponent-name">—</span>
+              </p>
+              <p>
+                <strong>Punkty przeciwnika:</strong>
+                <span id="end-opponent-score">0</span>
+              </p>
+              <p>
+                <strong>Czas przeciwnika:</strong>
+                <span id="end-opponent-time">00:00</span>
+              </p>
               <p id="end-winner" class="winner-text"></p>
             </div>
           </div>
@@ -349,7 +406,7 @@
         <div class="panel panel-wide">
           <h2>Ranking Zespołów</h2>
           <p class="subtitle">Najlepsze wyniki w Escape Room: Release Day</p>
-          
+
           <div class="ranking-controls">
             <label>
               Sortuj według:
@@ -359,7 +416,9 @@
                 <option value="date">Data (najnowsze)</option>
               </select>
             </label>
-            <button id="btn-back-from-ranking" class="btn secondary">Powrót</button>
+            <button id="btn-back-from-ranking" class="btn secondary">
+              Powrót
+            </button>
           </div>
 
           <div class="ranking-table-container">
@@ -378,7 +437,9 @@
                 <!-- Wypełniane z JS -->
               </tbody>
             </table>
-            <p id="ranking-empty" class="ranking-empty hidden">Brak wyników. Zagraj, aby pojawić się w rankingu!</p>
+            <p id="ranking-empty" class="ranking-empty hidden">
+              Brak wyników. Zagraj, aby pojawić się w rankingu!
+            </p>
           </div>
         </div>
       </section>
@@ -387,8 +448,10 @@
       <section id="screen-multiplayer" class="screen">
         <div class="panel panel-center">
           <h2>Multiplayer: Rywalizacja Online</h2>
-          <p class="subtitle">Graj jednocześnie z inną drużyną i wygraj zdobywając więcej punktów!</p>
-          
+          <p class="subtitle">
+            Graj jednocześnie z inną drużyną i wygraj zdobywając więcej punktów!
+          </p>
+
           <div id="multiplayer-status" class="multiplayer-status">
             <p id="multiplayer-status-text">Łączenie z serwerem...</p>
           </div>
@@ -397,9 +460,15 @@
             <h3>Utwórz pokój</h3>
             <label>
               Nazwa zespołu:
-              <input type="text" id="mp-team-name" placeholder="np. Agile Ninjas" />
+              <input
+                type="text"
+                id="mp-team-name"
+                placeholder="np. Agile Ninjas"
+              />
             </label>
-            <button id="btn-create-room" class="btn primary">Utwórz pokój</button>
+            <button id="btn-create-room" class="btn primary">
+              Utwórz pokój
+            </button>
             <p id="mp-room-id-display" class="room-id-display hidden">
               ID pokoju: <strong id="mp-room-id"></strong>
               <button id="btn-copy-room-id" class="btn-link">Kopiuj</button>
@@ -410,11 +479,19 @@
             <h3>Dołącz do pokoju</h3>
             <label>
               Nazwa zespołu:
-              <input type="text" id="mp-join-team-name" placeholder="np. Scrum Masters" />
+              <input
+                type="text"
+                id="mp-join-team-name"
+                placeholder="np. Scrum Masters"
+              />
             </label>
             <label>
               ID pokoju:
-              <input type="text" id="mp-join-room-id" placeholder="Wklej ID pokoju" />
+              <input
+                type="text"
+                id="mp-join-room-id"
+                placeholder="Wklej ID pokoju"
+              />
             </label>
             <button id="btn-join-room" class="btn primary">Dołącz</button>
           </div>
@@ -429,10 +506,14 @@
           <div id="multiplayer-ready" class="multiplayer-section hidden">
             <h3>Oba zespoły gotowe!</h3>
             <p>Przeciwnik: <strong id="mp-ready-opponent"></strong></p>
-            <button id="btn-start-multiplayer" class="btn primary">Rozpocznij grę</button>
+            <button id="btn-start-multiplayer" class="btn primary">
+              Rozpocznij grę
+            </button>
           </div>
 
-          <button id="btn-back-from-multiplayer" class="btn secondary">Powrót</button>
+          <button id="btn-back-from-multiplayer" class="btn secondary">
+            Powrót
+          </button>
         </div>
       </section>
     </div>
@@ -441,5 +522,3 @@
     <script src="game.js"></script>
   </body>
 </html>
-
-

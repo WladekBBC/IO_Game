@@ -271,6 +271,12 @@ function bindStartScreen() {
     state.startTimestamp = Date.now();
     state.finished = false;
 
+    // Wyłącz stary timer jeśli wciąż działa
+    if (state.timerId) {
+      clearInterval(state.timerId);
+      state.timerId = null;
+    }
+
     if (state.mode === "multiplayer") {
       // Przejdź do ekranu multiplayer
       $("#screen-start").classList.remove("active");
@@ -291,7 +297,13 @@ function bindStartScreen() {
 
     state.sprint = 0;
     state.quizAnswers = {};
+    state.backlogItems = [];
+    state.stories = [];
+    state.tests = [];
     buildQuiz();
+    buildBacklog();
+    buildStories();
+    buildTests();
     goToRoom("quiz");
     updateProgressBar();
     startTimer();
@@ -955,8 +967,10 @@ function initDragAndDrop() {
     // Mobile: Touch Events
     card.addEventListener("touchstart", (e) => {
       touchState.dragging = card;
-      touchState.offsetX = e.touches[0].clientX - card.getBoundingClientRect().left;
-      touchState.offsetY = e.touches[0].clientY - card.getBoundingClientRect().top;
+      touchState.offsetX =
+        e.touches[0].clientX - card.getBoundingClientRect().left;
+      touchState.offsetY =
+        e.touches[0].clientY - card.getBoundingClientRect().top;
       card.classList.add("dragging");
       card.style.zIndex = "10000";
       disableTouchScroll();
@@ -1179,12 +1193,21 @@ function updateProgressBar() {
 function bindRestart() {
   const btnRestart = $("#btn-restart");
   btnRestart.addEventListener("click", () => {
+    // Wyłącz stary timer jeśli wciąż działa
+    if (state.timerId) {
+      clearInterval(state.timerId);
+      state.timerId = null;
+    }
+
     // Reset stanu
     state.score = 0;
     state.sprint = 0;
     state.timerSeconds = 10 * 60;
     state.finished = false;
     state.quizAnswers = {};
+    state.backlogItems = [];
+    state.stories = [];
+    state.tests = [];
 
     $("#hud-score").textContent = "0";
     $("#hud-sprint").textContent = "1";
@@ -1193,13 +1216,28 @@ function bindRestart() {
     $("#screen-end").classList.remove("active");
     $("#screen-start").classList.add("active");
 
-    // Opróżnij listy i zbuduj na nowo
+    // Opróżnij wszystkie kontenery (zarówno źródłowe jak i docelowe)
     if ($("#quiz-container")) {
       $("#quiz-container").innerHTML = "";
     }
-    $("#sprint-backlog").innerHTML = "";
-    $("#stories-sprint").innerHTML = "";
-    $("#stories-later").innerHTML = "";
+    if ($("#product-backlog")) {
+      $("#product-backlog").innerHTML = "";
+    }
+    if ($("#sprint-backlog")) {
+      $("#sprint-backlog").innerHTML = "";
+    }
+    if ($("#stories-pool")) {
+      $("#stories-pool").innerHTML = "";
+    }
+    if ($("#stories-sprint")) {
+      $("#stories-sprint").innerHTML = "";
+    }
+    if ($("#stories-later")) {
+      $("#stories-later").innerHTML = "";
+    }
+    if ($("#tests-pool")) {
+      $("#tests-pool").innerHTML = "";
+    }
     if ($("#tests-stories-container")) {
       $("#tests-stories-container").innerHTML = "";
     }
@@ -1596,14 +1634,32 @@ function startMultiplayerGame() {
   state.sprint = 0;
   state.timerSeconds = 10 * 60;
   state.quizAnswers = {};
+  state.backlogItems = [];
+  state.stories = [];
+  state.tests = [];
 
-  // Reset pokoi
+  // Reset pokoi - czyszczenie wszystkich kontenerów
   if ($("#quiz-container")) {
     $("#quiz-container").innerHTML = "";
   }
-  $("#sprint-backlog").innerHTML = "";
-  $("#stories-sprint").innerHTML = "";
-  $("#stories-later").innerHTML = "";
+  if ($("#product-backlog")) {
+    $("#product-backlog").innerHTML = "";
+  }
+  if ($("#sprint-backlog")) {
+    $("#sprint-backlog").innerHTML = "";
+  }
+  if ($("#stories-pool")) {
+    $("#stories-pool").innerHTML = "";
+  }
+  if ($("#stories-sprint")) {
+    $("#stories-sprint").innerHTML = "";
+  }
+  if ($("#stories-later")) {
+    $("#stories-later").innerHTML = "";
+  }
+  if ($("#tests-pool")) {
+    $("#tests-pool").innerHTML = "";
+  }
   if ($("#tests-stories-container")) {
     $("#tests-stories-container").innerHTML = "";
   }
@@ -1620,18 +1676,24 @@ function startMultiplayerGame() {
 }
 
 // Obsługa touch na mobilu - zapobiega domyślnym zachowaniom
-if ('ontouchstart' in window) {
+if ("ontouchstart" in window) {
   // Wyłącz podwójny tap zoom na przyciskach i input polach
-  document.addEventListener('touchend', (e) => {
-    if (e.target.tagName === 'BUTTON' || 
-        e.target.tagName === 'INPUT' ||
-        e.target.tagName === 'SELECT' ||
-        e.target.classList.contains('quiz-option') ||
-        e.target.classList.contains('card')) {
-      e.preventDefault();
-      e.target.click?.();
-    }
-  }, false);
+  document.addEventListener(
+    "touchend",
+    (e) => {
+      if (
+        e.target.tagName === "BUTTON" ||
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "SELECT" ||
+        e.target.classList.contains("quiz-option") ||
+        e.target.classList.contains("card")
+      ) {
+        e.preventDefault();
+        e.target.click?.();
+      }
+    },
+    false
+  );
 }
 
 document.addEventListener("DOMContentLoaded", init);
