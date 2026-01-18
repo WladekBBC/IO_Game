@@ -940,6 +940,7 @@ select:focus {
 
   .test-list {
     max-height: 150px;
+    min-height: 80px;
   }
 
   .quiz-container {
@@ -968,7 +969,7 @@ select:focus {
   }
 
   .droppable {
-    min-height: 60px;
+    min-height: 80px;
   }
 
   .droppable.drag-over {

@@ -1045,39 +1045,65 @@ function initDragAndDrop() {
         const draggingCard = touchState.dragging;
 
         // Sprawdź, nad jaką strefą skończy się dotyk
-        droppables.forEach((zone) => {
-          const zoneRect = zone.getBoundingClientRect();
-          const isOver =
-            touch.clientX >= zoneRect.left &&
-            touch.clientX <= zoneRect.right &&
-            touch.clientY >= zoneRect.top &&
-            touch.clientY <= zoneRect.bottom;
+        // Sortuj po odległości - znajdź najbliższą dropzone
+        const dropZonesByDistance = Array.from(droppables)
+          .map((zone) => {
+            const zoneRect = zone.getBoundingClientRect();
+            const centerX = (zoneRect.left + zoneRect.right) / 2;
+            const centerY = (zoneRect.top + zoneRect.bottom) / 2;
+            const distance = Math.sqrt(
+              Math.pow(touch.clientX - centerX, 2) +
+                Math.pow(touch.clientY - centerY, 2),
+            );
+            return { zone, distance };
+          })
+          .sort((a, b) => a.distance - b.distance);
 
-          if (isOver && !dropped) {
-            zone.classList.remove("drag-over");
+        // Jeśli test, szukaj nearest test-list z matching story ID
+        if (draggingCard.classList.contains("test-card")) {
+          const targetStoryId = draggingCard.dataset.storyId;
+          const matchingZone = dropZonesByDistance.find(
+            (item) =>
+              item.zone.classList.contains("test-list") &&
+              item.zone.dataset.storyId === targetStoryId,
+          );
 
-            // Dla testów - sprawdź czy test pasuje do story
-            if (
-              draggingCard.classList.contains("test-card") &&
-              zone.classList.contains("test-list")
-            ) {
-              const testStoryId = draggingCard.dataset.storyId;
-              const targetStoryId = zone.dataset.storyId;
-
-              if (testStoryId === targetStoryId) {
-                // Prawidłowe przypisanie - dodaj wizualną informację
-                draggingCard.classList.add("correct-match");
-                setTimeout(() => {
-                  draggingCard.classList.remove("correct-match");
-                }, 1000);
-              }
-            }
-
-            // Przenieś kartę
-            zone.appendChild(draggingCard);
+          if (matchingZone) {
+            matchingZone.zone.classList.remove("drag-over");
+            draggingCard.classList.add("correct-match");
+            setTimeout(() => {
+              draggingCard.classList.remove("correct-match");
+            }, 1000);
+            matchingZone.zone.appendChild(draggingCard);
             dropped = true;
+          } else {
+            // Spróbuj dowolną test-list
+            const anyTestList = dropZonesByDistance.find((item) =>
+              item.zone.classList.contains("test-list"),
+            );
+            if (anyTestList) {
+              anyTestList.zone.classList.remove("drag-over");
+              anyTestList.zone.appendChild(draggingCard);
+              dropped = true;
+            }
           }
-        });
+        } else {
+          // Dla backlogu i stories - zwykła logika
+          droppables.forEach((zone) => {
+            const zoneRect = zone.getBoundingClientRect();
+            const isOver =
+              touch.clientX >= zoneRect.left &&
+              touch.clientX <= zoneRect.right &&
+              touch.clientY >= zoneRect.top &&
+              touch.clientY <= zoneRect.bottom;
+
+            if (isOver && !dropped) {
+              zone.classList.remove("drag-over");
+              zone.appendChild(draggingCard);
+              dropped = true;
+            }
+          });
+        }
 
         // Przywróć styl
         draggingCard.style.position = "relative";
