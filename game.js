@@ -927,10 +927,7 @@ function bindConflictRoom() {
         feedback.className = "feedback error";
         state.score += 5;
         updateScoreDisplay();
-        endGame(
-          true,
-          "Udało się dowieźć release, ale z opóźnieniem – warto lepiej planować Sprinty.",
-        );
+        endGame(true, "Udało się dowieźć release!");
       } else {
         btn.classList.add("wrong");
         feedback.textContent =
@@ -1467,15 +1464,14 @@ function initMultiplayer() {
   // Sprawdź, czy Socket.io jest dostępny
   if (typeof io === "undefined") {
     $("#multiplayer-status-text").textContent =
-      "Socket.io nie jest załadowany. Upewnij się, że otwierasz grę przez serwer (http://localhost:3001), a nie bezpośrednio plik HTML.";
+      "Socket.io nie jest załadowany.";
     $("#multiplayer-status").style.borderColor = "#fb7185";
     return;
   }
 
   // Sprawdź, czy otwieramy przez serwer (nie file://)
   if (window.location.protocol === "file:") {
-    $("#multiplayer-status-text").textContent =
-      "Multiplayer wymaga serwera. Uruchom: npm start, a następnie otwórz http://localhost:3001";
+    $("#multiplayer-status-text").textContent = "Multiplayer wymaga serwera.";
     $("#multiplayer-status").style.borderColor = "#fb7185";
     return;
   }
