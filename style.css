@@ -934,8 +934,12 @@ select:focus {
   }
 
   .stories-tests-container {
-    max-height: 400px;
-    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+overflow: auto;
+width: 100%;
+border: 1px solid black;
+height: 100px;
+padding: 1em;
   }
 
   .test-list {
